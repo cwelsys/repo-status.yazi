@@ -147,6 +147,13 @@ require("repo-status"):setup {
 	icon = "󰊢 ",
 	-- Give every sign its own column, see "Alignment"
 	align = true,
+	-- The branch name, see "Branch name"
+	branch = {
+		-- Branches whose name is not shown, only the icon and signs
+		hide = {},
+		-- Longest branch name, longer ones are cut with "…"; nil for no limit
+		max = nil,
+	},
 	-- The changed files in the preview, see "Changes in the preview"
 	preview = {
 		-- Largest part of the preview the changes may take, 0 to hide them
@@ -182,6 +189,32 @@ require("repo-status"):setup {
 	signs = { stashed = "", modified = "*" },
 	preview = { format = "long" },
 }
+```
+
+## Branch name
+
+The summary sits on the same row as the directory name, so a long branch
+name leaves little room for it in a narrow pane. Two options keep it short:
+
+```lua
+require("repo-status"):setup {
+	align = false,
+	branch = {
+		hide = { "main", "master" },
+		max = 16,
+	},
+}
+```
+
+Repositories on a branch listed in `hide` show only the icon and their signs,
+so a branch name appears only when it is not one of the usual ones. Names
+longer than `max` are cut with `…`. A detached `HEAD` always shows its short
+commit hash.
+
+```
+ dotfiles                 󰊢 !+
+ notes                       󰊢
+ website   󰊢 feature/blog-po… ?
 ```
 
 ## Alignment

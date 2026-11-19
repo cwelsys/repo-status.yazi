@@ -10,7 +10,12 @@
 ---@field icon string Text shown before the branch name
 ---@field align boolean Whether to align the signs of the repositories in a directory
 ---@field signs table<string, string> Sign per status, an empty string hides that status
+---@field branch BranchOptions
 ---@field preview PreviewOptions
+
+---@class BranchOptions
+---@field hide table<string, boolean> Branches whose name is not shown, only the icon and signs
+---@field max number? Longest branch name in cells, longer ones are cut with `…`
 
 ---@class PreviewOptions
 ---@field height number Largest part of the preview the changed files may take, 0 to not show them

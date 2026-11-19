@@ -120,12 +120,35 @@ local function parse_numstat(output)
 	return stats
 end
 
+---@param name string
+---@param max number?
+---@return string
+local function shorten(name, max)
+	if not max or max < 1 or ui.Line(name):width() <= max then
+		return name
+	elseif not (utf8 and utf8.len(name)) then
+		return name:sub(1, max - 1) .. "…"
+	end
+	return name:sub(1, utf8.offset(name, max) - 1) .. "…"
+end
+
+---@param status RepoStatus
+---@param opts Options
+---@return string
+local function head(status, opts)
+	local name = ""
+	if not (status.branch and opts.branch.hide[status.branch]) then
+		name = shorten(status.branch or (status.oid or ""):sub(1, 7), opts.branch.max)
+	end
+	return name == "" and (opts.icon:gsub("%s+$", "")) or opts.icon .. name
+end
+
 ---@param status RepoStatus
 ---@param opts Options
 ---@return Cells
 local function cells(status, opts)
 	local signs = opts.signs
-	local cells = { head = opts.icon .. (status.branch or (status.oid or ""):sub(1, 7)) }
+	local cells = { head = head(status, opts) }
 	for _, name in ipairs(ORDER) do
 		cells[name] = status[name] and signs[name] or ""
 	end
@@ -231,6 +254,12 @@ local function setup(st, opts)
 	end
 	opts.signs = ya.dict_merge(ya.dict_merge({}, SIGNS), opts.signs or {})
 	opts.preview = ya.dict_merge({ height = 0.5, format = "short", stat = false }, opts.preview or {})
+
+	local branch, hide = opts.branch or {}, {}
+	for _, name in ipairs(branch.hide or {}) do
+		hide[name] = true
+	end
+	opts.branch = { hide = hide, max = branch.max }
 
 	st.repos = {}
 	st.dirs = {}
