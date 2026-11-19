@@ -147,6 +147,8 @@ require("repo-status"):setup {
 	styles = {},
 	-- Text shown before the branch name
 	icon = "󰊢 ",
+	-- Show the icon only for repositories without any signs, see "Branch name"
+	icon_only_clean = false,
 	-- Give every sign its own column, see "Alignment"
 	align = true,
 	-- The branch name, see "Branch name"
@@ -212,6 +214,10 @@ Repositories on a branch listed in `hide` show only the icon and their signs,
 so a branch name appears only when it is not one of the usual ones. Names
 longer than `max` are cut with `…`. A detached `HEAD` always shows its short
 commit hash.
+
+With `icon_only_clean = true` the icon is left out whenever a repository shows
+any sign, since the signs already mark it as a repository. Clean repositories
+on a hidden branch still show the icon, so every repository is marked.
 
 ```
  dotfiles                 󰊢 !+

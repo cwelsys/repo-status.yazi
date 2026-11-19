@@ -175,9 +175,23 @@ local function measure(repos)
 end
 
 ---@param cells Cells
+---@return boolean
+local function is_clean(cells)
+	for _, names in ipairs { ORDER, UPSTREAM } do
+		for _, name in ipairs(names) do
+			if cells[name] ~= "" then
+				return false
+			end
+		end
+	end
+	return true
+end
+
+---@param cells Cells
 ---@param widths table<string, number>? Width to pad every cell to, `nil` to not align them
+---@param opts Options
 ---@return Segment[]
-local function format(cells, widths)
+local function format(cells, widths, opts)
 	local segments = {}
 	local function add(text, name)
 		if text ~= "" then
@@ -185,7 +199,9 @@ local function format(cells, widths)
 		end
 	end
 
-	add(cells.icon, "icon")
+	if not opts.icon_only_clean or is_clean(cells) then
+		add(cells.icon, "icon")
+	end
 	add(cells.branch, "branch")
 	for _, names in ipairs { ORDER, UPSTREAM } do
 		local group = {}
@@ -197,7 +213,9 @@ local function format(cells, widths)
 			end
 		end
 		if #group > 0 then
-			add(" ")
+			if #segments > 0 then
+				add(" ")
+			end
 			for _, part in ipairs(group) do
 				add(part[1], part[2])
 				add(part[3])
@@ -243,7 +261,7 @@ local save = ya.sync(function(st, repos)
 	for dir in pairs(changed) do
 		local widths = st.opts.align and measure(st.dirs[dir]) or nil
 		for path, cells in pairs(st.dirs[dir]) do
-			st.repos[path] = format(cells, widths)
+			st.repos[path] = format(cells, widths, st.opts)
 		end
 		if not next(st.dirs[dir]) then
 			st.dirs[dir] = nil

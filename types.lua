@@ -9,6 +9,7 @@
 ---@field style Style The style of the summary
 ---@field styles table<string, Style> Style per part of the summary, falls back to `style`
 ---@field icon string Text shown before the branch name
+---@field icon_only_clean boolean Whether to show the icon only for repositories without any signs
 ---@field align boolean Whether to align the signs of the repositories in a directory
 ---@field signs table<string, string> Sign per status, an empty string hides that status
 ---@field branch BranchOptions
