@@ -143,6 +143,8 @@ require("repo-status"):setup {
 	order = 1400,
 	-- Style of the summary
 	style = ui.Style():fg("yellow"),
+	-- Style per part of the summary, see "Colors"; parts not listed use `style`
+	styles = {},
 	-- Text shown before the branch name
 	icon = "󰊢 ",
 	-- Give every sign its own column, see "Alignment"
@@ -215,6 +217,27 @@ commit hash.
  dotfiles                 󰊢 !+
  notes                       󰊢
  website   󰊢 feature/blog-po… ?
+```
+
+## Colors
+
+`style` colours the whole summary. To colour its parts separately, set
+`styles` with a style for any of `icon`, `branch` and the names of the signs
+(`conflicted`, `untracked`, `stashed`, `modified`, `staged`, `renamed`,
+`deleted`, `ahead`, `behind`, `diverged`). Parts that are not listed keep
+`style`:
+
+```lua
+require("repo-status"):setup {
+	styles = {
+		icon = ui.Style():fg("gray"),
+		branch = ui.Style():fg("magenta"),
+		untracked = ui.Style():fg("blue"),
+		modified = ui.Style():fg("yellow"),
+		ahead = ui.Style():fg("green"),
+		behind = ui.Style():fg("red"),
+	},
+}
 ```
 
 ## Alignment

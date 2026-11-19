@@ -134,13 +134,14 @@ end
 
 ---@param status RepoStatus
 ---@param opts Options
----@return string
+---@return string icon
+---@return string branch
 local function head(status, opts)
 	local name = ""
 	if not (status.branch and opts.branch.hide[status.branch]) then
 		name = shorten(status.branch or (status.oid or ""):sub(1, 7), opts.branch.max)
 	end
-	return name == "" and (opts.icon:gsub("%s+$", "")) or opts.icon .. name
+	return name == "" and (opts.icon:gsub("%s+$", "")) or opts.icon, name
 end
 
 ---@param status RepoStatus
@@ -148,7 +149,8 @@ end
 ---@return Cells
 local function cells(status, opts)
 	local signs = opts.signs
-	local cells = { head = head(status, opts) }
+	local icon, branch = head(status, opts)
+	local cells = { icon = icon, branch = branch }
 	for _, name in ipairs(ORDER) do
 		cells[name] = status[name] and signs[name] or ""
 	end
@@ -174,20 +176,35 @@ end
 
 ---@param cells Cells
 ---@param widths table<string, number>? Width to pad every cell to, `nil` to not align them
----@return string
+---@return Segment[]
 local function format(cells, widths)
-	local parts = { cells.head }
-	for _, names in ipairs { ORDER, UPSTREAM } do
-		local group = ""
-		for _, name in ipairs(names) do
-			local cell = cells[name]
-			group = group .. cell .. (widths and string.rep(" ", widths[name] - ui.Line(cell):width()) or "")
-		end
-		if group ~= "" then
-			parts[#parts + 1] = group
+	local segments = {}
+	local function add(text, name)
+		if text ~= "" then
+			segments[#segments + 1] = { text = text, name = name }
 		end
 	end
-	return table.concat(parts, " ")
+
+	add(cells.icon, "icon")
+	add(cells.branch, "branch")
+	for _, names in ipairs { ORDER, UPSTREAM } do
+		local group = {}
+		for _, name in ipairs(names) do
+			local cell = cells[name]
+			local pad = widths and string.rep(" ", widths[name] - ui.Line(cell):width()) or ""
+			if cell .. pad ~= "" then
+				group[#group + 1] = { cell, name, pad }
+			end
+		end
+		if #group > 0 then
+			add(" ")
+			for _, part in ipairs(group) do
+				add(part[1], part[2])
+				add(part[3])
+			end
+		end
+	end
+	return segments
 end
 
 ---@param url Url
@@ -248,6 +265,7 @@ local function setup(st, opts)
 	opts = opts or {}
 	opts.order = opts.order or 1400
 	opts.style = opts.style or ui.Style():fg("yellow")
+	opts.styles = opts.styles or {}
 	opts.icon = opts.icon or "󰊢 "
 	if opts.align == nil then
 		opts.align = true
@@ -268,14 +286,20 @@ local function setup(st, opts)
 
 	-- Linemode children are drawn right-aligned in the file list
 	Linemode:children_add(function(self)
-		local summary = self._file.in_current and st.repos[tostring(self._file.url)]
-		if not summary then
+		local segments = self._file.in_current and st.repos[tostring(self._file.url)]
+		if not segments then
 			return ""
-		elseif self._file.is_hovered then
-			return ui.Line { " ", summary }
-		else
-			return ui.Line { " ", ui.Span(summary):style(opts.style) }
 		end
+
+		local spans = { ui.Span(" ") }
+		for _, segment in ipairs(segments) do
+			local span = ui.Span(segment.text)
+			if not self._file.is_hovered then
+				span = span:style(opts.styles[segment.name or ""] or opts.style)
+			end
+			spans[#spans + 1] = span
+		end
+		return ui.Line(spans)
 	end, opts.order)
 end
 
